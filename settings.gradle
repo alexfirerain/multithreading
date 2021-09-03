@@ -1,0 +1,5 @@
+rootProject.name = 'multithreading'
+include 'talking-threads'
+include 'reflective-threads'
+include 'recursive-multicomputing'
+
