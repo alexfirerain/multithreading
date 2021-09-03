@@ -1,19 +1,29 @@
 import java.util.Date;
 
 public class TalkingThread extends Thread {
-    long MIN_DELAY = 2500,
-         MAX_DELAY = 3500;
+    final private long MIN_DELAY,
+                       MAX_DELAY;
 
     @Override
     public void run() {
         try {
-            while (!isInterrupted()) {
-                Thread.sleep(randomDelay());
-                System.out.println( new Date() + "\tПривет, я поток " + getName());
-            }
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+            while (!isInterrupted())
+                doingWork();
+        } catch (InterruptedException ignored) {}
+        finally {
+            System.out.printf("%s\tПоток %s завершён%n", new Date(), getName());
         }
+    }
+
+    public TalkingThread(ThreadGroup group, String name, long MIN_DELAY, long MAX_DELAY) {
+        super(group, name);
+        this.MIN_DELAY = MIN_DELAY;
+        this.MAX_DELAY = MAX_DELAY;
+    }
+
+    protected void doingWork() throws InterruptedException {
+        Thread.sleep(randomDelay());
+        System.out.println(new Date() + "\tПривет, я поток " + getName() + "!");
     }
 
     private long randomDelay() {
