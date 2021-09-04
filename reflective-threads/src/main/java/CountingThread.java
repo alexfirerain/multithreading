@@ -14,7 +14,7 @@ public class CountingThread extends TalkingThread implements Callable<Integer> {
     @Override
     protected void doingWork() throws InterruptedException {
         if (counter >= MAX_TALK)
-            throw new InterruptedException();
+            throw new InterruptedException(); // call() !?
         super.doingWork();
         counter++;
     }
