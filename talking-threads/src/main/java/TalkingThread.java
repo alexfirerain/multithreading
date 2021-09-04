@@ -11,7 +11,7 @@ public class TalkingThread extends Thread {
                 doingWork();
         } catch (InterruptedException ignored) {}
         finally {
-            System.out.printf("%s\tПоток %s завершён%n", new Date(), getName());
+            System.out.printf("%s\tПоток %s ЗАВЕРШЁН%n", new Date(), getName());
         }
     }
 

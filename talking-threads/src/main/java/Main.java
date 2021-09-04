@@ -5,7 +5,7 @@ public class Main {
 
     public static void main(String[] args) {
         ThreadGroup chatRoom = new ThreadGroup("Переговорная");
-        System.out.println(new Date() + "\tКОМНАТА ОТКРЫТА");
+        System.out.println(new Date() + "\t" + chatRoom.getName() + " ОТКРЫТА");
 
         TalkingThread a = new TalkingThread(chatRoom, "первый", 1800, 3800);
         a.start();
@@ -22,6 +22,6 @@ public class Main {
             System.out.println(e.getMessage());
         }
         chatRoom.interrupt();
-        System.out.println(new Date() + "\tКОМНАТА ЗАКРЫТА");
+        System.out.println(new Date() + "\t" + chatRoom.getName() + " ЗАКРЫТА");
     }
 }
