@@ -1,8 +1,8 @@
 import java.util.Date;
 
 public class TalkingThread extends Thread {
-    final private long MIN_DELAY,
-                       MAX_DELAY;
+    protected final long MIN_DELAY;
+    protected final long MAX_DELAY;
 
     @Override
     public void run() {
@@ -41,5 +41,8 @@ public class TalkingThread extends Thread {
                 new TalkingThread(group, "третий", 2500, 3500),
                 new TalkingThread(group, "четвёртый", 1800, 2500)
         };
+    }
+    public static TalkingThread[] demoSet() {
+        return demoSet(null);
     }
 }
