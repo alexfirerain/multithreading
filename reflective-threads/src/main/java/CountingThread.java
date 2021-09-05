@@ -13,26 +13,26 @@ public class CountingThread extends TalkingThread implements Callable<Integer> {
         this.MAX_TALK = MAX_TALK;
     }
 
-    public CountingThread(String name, long MIN_DELAY, long MAX_DELAY, int MAX_TALK) {
-        super(null, name, MIN_DELAY, MAX_DELAY);
-        this.MAX_TALK = MAX_TALK;
-    }
-
     @Override
     protected void doingWork() throws InterruptedException {
-        if (counter == MAX_TALK) return;
         super.doingWork();
         counter++;
     }
 
     @Override
     public Integer call() {
-        run();
+        try {
+            while (counter < MAX_TALK)
+                doingWork();
+        } catch (InterruptedException ignored) {
+        } finally {
+            finalAction();
+        }
         return counter;
     }
 
     public static List<CountingThread> demoSet(int maxTalk) {
-        return Arrays.stream( demoSet() )
+        return Arrays.stream(demoSet())
                 .map(talkingThread -> new CountingThread(talkingThread, maxTalk))
                 .collect(Collectors.toCollection(() -> new ArrayList<>(demoSet().length)));
     }

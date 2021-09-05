@@ -26,7 +26,7 @@ public class TalkingThread extends Thread {
         System.out.println(new Date() + "\tПривет, я поток " + getName() + "!");
     }
 
-    private void finalAction() {
+    protected void finalAction() {
         System.out.printf("%s\tПоток %s ЗАВЕРШЁН%n", new Date(), getName());
     }
 
