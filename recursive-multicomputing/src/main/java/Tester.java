@@ -31,7 +31,7 @@ public class Tester {
     }
 
     private String executeSingleBatch(Function<Integer[], Long> operation, Integer[] array, int repetitions) {
-        long totalTestsDuration = 0;
+        long overallTestsDuration = 0;
         long maxDuration = 0;
         long minDuration = Long.MAX_VALUE;
         long sum = 0;
@@ -44,9 +44,9 @@ public class Tester {
 
             if (duration > maxDuration) maxDuration = duration;
             if (duration < minDuration) minDuration = duration;
-            totalTestsDuration += duration;
+            overallTestsDuration += duration;
         }
-        long averageDuration = Math.round((double) totalTestsDuration / (double) repetitions);
+        long averageDuration = Math.round((double) overallTestsDuration / (double) repetitions);
 
         return "Сумма %d вычислена за среднее время %s (минимальное %s, максимальное %s)\n"
                 .formatted(sum,
@@ -76,7 +76,8 @@ public class Tester {
     };
 
     static Function<Integer[], Long> recursiveSum = (Integer[] arr) ->
-            new ForkJoinPool().invoke(new ParallelSum(arr, 0, arr.length - 1));
+            new ForkJoinPool()
+                    .invoke(new ParallelSum(arr, 0, arr.length - 1));
 
     private String nanoTimeFormatter(long duration) {
         if (duration < 10_000)
@@ -100,19 +101,6 @@ public class Tester {
             range = ending - beginning;
         }
 
-//        @Override
-//        protected Long compute() {
-//            int range = ending - beginning;
-//            if (range == 0)
-//                return (long) arr[beginning];
-//            else if (range == 1)
-//                return (long) (arr[beginning] + arr[beginning + 1]);
-//            int median = range / 2 + beginning;
-//                ParallelSum semisum1 = new ParallelSum(arr, beginning, median);
-//            ParallelSum semisum2 = new ParallelSum(arr, median + 1, ending);
-//            invokeAll(semisum1, semisum2);
-//            return semisum1.join() + semisum2.join();
-//        }
         @Override
         protected Long compute() {
             if (range == 0)
@@ -121,7 +109,7 @@ public class Tester {
                 return (long) (arr[beginning] + arr[beginning + 1]);
             return splitAndCompute();
         }
-        
+
         private Long splitAndCompute() {
             int median = range / 2 + beginning;
             ParallelSum semisum1 = new ParallelSum(arr, beginning, median);
@@ -129,7 +117,7 @@ public class Tester {
             invokeAll(semisum1, semisum2);
             return semisum1.join() + semisum2.join();
         }
-        
+
     }
 
 }
