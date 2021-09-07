@@ -1,25 +1,27 @@
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.RecursiveTask;
 import java.util.function.Function;
 
 public class Tester {
-    private final int[] arrLengths;
+    private final int[] arrSizes;
     private final int arrValMin;
     private final int arrValMax;
     private final int repetitions;
     private final StringBuilder report;
 
-    public Tester(int[] arrLengths, int arrValMin, int arrValMax, int repetitions) {
-        this.arrLengths = arrLengths;
+    public Tester(int[] arrSizes, int arrValMin, int arrValMax, int repetitions) {
+        this.arrSizes = arrSizes;
         this.arrValMin = arrValMin;
         this.arrValMax = arrValMax;
         this.repetitions = repetitions;
         report = new StringBuilder();
         report.append("Будет проведено сравнительное тестирование двух реализаций суммирования массива: в один поток и рекурсивное.\n")
                 .append("Будут сгенерированы массивы длиной: ");
-        for (int i = 0; i < arrLengths.length; i++) {
-            report.append(arrLengths[i]);
+        for (int i = 0; i < arrSizes.length; i++) {
+            report.append( arrSizes[i]);
 
-            if (i == arrLengths.length - 1)         report.append("; ");
-            else if (i == arrLengths.length - 2)    report.append(" и ");
+            if (i == arrSizes.length - 1)         report.append("; ");
+            else if (i == arrSizes.length - 2)    report.append(" и ");
             else                                    report.append(", ");
         }
         report.append("заполнены они будут случайными целыми числами от %d до %d.\n"
@@ -28,7 +30,7 @@ public class Tester {
                 .formatted(repetitions));
     }
 
-    private String executeSingleTest(Function<Integer[], Long> operation, Integer[] array, int repetitions) {
+    private String executeSingleBatch(Function<Integer[], Long> operation, Integer[] array, int repetitions) {
         long totalTestsDuration = 0;
         long maxDuration = 0;
         long minDuration = Long.MAX_VALUE;
@@ -54,13 +56,13 @@ public class Tester {
     }
 
     public void executeTesting() {
-        for (int arrLength : arrLengths) {
+        for (int arrLength : arrSizes) {
             Integer[] testArray = ArrGenerator.generate(arrLength, arrValMin, arrValMax);
-            report.append("Массив из %d элементов:\n".formatted(arrLength))
+            report.append("----------Массив из %d элементов-------------\n".formatted(arrLength))
                     .append("\tОднопоточное суммирование:\n")
-                    .append(executeSingleTest(singleThreadSum, testArray, repetitions))
+                    .append(executeSingleBatch(singleThreadSum, testArray, repetitions))
                     .append("\tРекурсивное суммирование:\n")
-                    .append(executeSingleTest(recursiveSum, testArray, repetitions))
+                    .append(executeSingleBatch(recursiveSum, testArray, repetitions))
                     .append("\n");
         }
         System.out.println(report.toString());
@@ -73,10 +75,61 @@ public class Tester {
         return sum;
     };
 
-    static Function<Integer[], Long> recursiveSum = (Integer[] arr) -> (long) 0;
+    static Function<Integer[], Long> recursiveSum = (Integer[] arr) ->
+            new ForkJoinPool().invoke(new ParallelSum(arr, 0, arr.length - 1));
 
     private String nanoTimeFormatter(long duration) {
-        if (duration < 10_000) return duration + " нс";
+        if (duration < 10_000)
+            return duration + " нс";
+        if (duration > 1_000_000_000)
+            return "%.3f с".formatted((double) duration / 1_000_000_000f);
         return "%.3f мс".formatted((double) duration / 1_000_000f);
     }
+
+
+
+    static class ParallelSum extends RecursiveTask<Long> {
+        Integer[] arr;
+        int beginning, ending, range;
+
+
+        public ParallelSum(Integer[] arr, int beginning, int ending) {
+            this.arr = arr;
+            this.beginning = beginning;
+            this.ending = ending;
+            range = ending - beginning;
+        }
+
+//        @Override
+//        protected Long compute() {
+//            int range = ending - beginning;
+//            if (range == 0)
+//                return (long) arr[beginning];
+//            else if (range == 1)
+//                return (long) (arr[beginning] + arr[beginning + 1]);
+//            int median = range / 2 + beginning;
+//                ParallelSum semisum1 = new ParallelSum(arr, beginning, median);
+//            ParallelSum semisum2 = new ParallelSum(arr, median + 1, ending);
+//            invokeAll(semisum1, semisum2);
+//            return semisum1.join() + semisum2.join();
+//        }
+        @Override
+        protected Long compute() {
+            if (range == 0)
+                return (long) arr[beginning];
+            else if (range == 1)
+                return (long) (arr[beginning] + arr[beginning + 1]);
+            return splitAndCompute();
+        }
+        
+        private Long splitAndCompute() {
+            int median = range / 2 + beginning;
+            ParallelSum semisum1 = new ParallelSum(arr, beginning, median);
+            ParallelSum semisum2 = new ParallelSum(arr, median + 1, ending);
+            invokeAll(semisum1, semisum2);
+            return semisum1.join() + semisum2.join();
+        }
+        
+    }
+
 }
